@@ -1,7 +1,7 @@
 tasks:
   - name: nodemon
-    init: echo 'iniciando'
-    command: npm i -g nodemon
+    init:  npm i -g nodemon
+    command: nodemon server.js
 
 
 ports:

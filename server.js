@@ -4,6 +4,13 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const app = express(); 
 
+const axios = require('axios');
+
+var config = {
+    /* Your settings here like Accept / Headers etc. */
+}
+
+
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended:true }));
@@ -21,49 +28,30 @@ app.use(function(req, res, next){
 app.listen(3333);
 
 app.get('/api', function(req, res){
-    fs.readFile('usuarios.json', 'utf8', function(err, data){
+    fs.readFile('vagasdb.json', 'utf8', function(err, data){
       if (err) {
         var response = {status: 'falha', resultado: err};
         res.json(response);
       } else {
         var obj = JSON.parse(data);
-        var result = 'Nenhum usuário foi encontrado';
-    
-        obj.usuarios.forEach(function(usuario) {
-          if (usuario != null) {
-            if (usuario.usuario_id == req.query.usuario_id) {
-              result = usuario;
-            }
-          }
-        });
-    
-        var response = {status: 'sucesso', resultado: result};
-        res.json(response);
+        res.json(obj);
       }
     });
    });
 
+   app.get('/saveDBVagas', function(req, res){
 
-   app.post('/api', function(req, res){
-    fs.readFile('usuarios.json', 'utf8', function(err, data){
-      if (err) {
-        var response = {status: 'falha', resultado: err};
-        res.json(response);
-      } else {
-        var obj = JSON.parse(data);
-        req.body.usuario_id = obj.usuarios.length + 1;
-    
-        obj.usuarios.push(req.body);
-    
-        fs.writeFile('usuarios.json', JSON.stringify(obj), function(err) {
-          if (err) {
-            var response = {status: 'falha', resultado: err};
-            res.json(response);
-          } else {
-            var response = {status: 'sucesso', resultado: 'Registro incluso com sucesso'};
-            res.json(response);
-          }
-        });
-      }
+    axios.get('https://www.vagas.com.br/mapa-de-carreiras/api/mapa', config)
+    .then(function(response) {
+        data = response.data['cargos']
+        fs.writeFileSync('vagasdb.json', JSON.stringify(data), function(err) {
+            if (err) {
+              var response = {status: 'falha', resultado: err};
+              res.json(response);
+            } else {
+              var response = {status: 'sucesso', resultado: 'Registro feito com sucesso'};
+              res.json(response);
+            }
+          });
     });
    });
