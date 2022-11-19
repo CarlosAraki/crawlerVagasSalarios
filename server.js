@@ -5,6 +5,7 @@ const fs = require('fs');
 const app = express(); 
 
 const axios = require('axios');
+const cheerio = require("cheerio"); 
 
 var config = {
     /* Your settings here like Accept / Headers etc. */
@@ -37,21 +38,59 @@ app.get('/api', function(req, res){
         res.json(obj);
       }
     });
-   });
+});
 
-   app.get('/saveDBVagas', function(req, res){
-
+app.get('/saveDBVagas', function(req, res){
     axios.get('https://www.vagas.com.br/mapa-de-carreiras/api/mapa', config)
     .then(function(response) {
         data = response.data['cargos']
+        let theRemovedElement = data.shift()
         fs.writeFileSync('vagasdb.json', JSON.stringify(data), function(err) {
             if (err) {
-              var response = {status: 'falha', resultado: err};
-              res.json(response);
+                var response = {status: 'falha', resultado: err};
+                res.json(response);
             } else {
-              var response = {status: 'sucesso', resultado: 'Registro feito com sucesso'};
-              res.json(response);
+                var response = {status: 'sucesso', resultado: 'Registro feito com sucesso'};
+                res.json(response);
+            }
+            });
+    });
+    res.json({'ok':'ok'});
+});
+
+app.get('/takeSalary', function(req, res){
+    fs.readFile('vagasdb.json', 'utf8', function(err, data){
+        if (err) {
+          var response = {status: 'falha', resultado: err};
+          res.json(response);
+        } else {
+          var obj = JSON.parse(data);
+          obj.forEach(function(role) {
+            if (role != null) {
+                axios.get('https://www.vagas.com.br/mapa-de-carreiras/servico/cargos/'+role[0], config)
+                .then(function(response) {
+                    data = response.data
+                    let $ = cheerio.load(data)
+                    console.log($)
+                    var response = {status: 200, resultado: 'Registro feito com sucesso'};
+                    res.json(response);
+
+                    fs.writeFileSync('vagaswithsalay.json', JSON.stringify(data), function(err) {
+                        if (err) {
+                            var response = {status: 'falha', resultado: err};
+                            res.json(response);
+                        } else {
+                            var response = {status: 'sucesso', resultado: 'Registro feito com sucesso'};
+                            res.json(response);
+                        }
+                    });
+                });
             }
           });
-    });
-   });
+
+
+          res.json({});
+        }
+      });
+    
+});
