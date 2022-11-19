@@ -67,42 +67,44 @@ app.get('/takeSalary', function(req, res){
           var obj = JSON.parse(data);
           obj.forEach(function(role) {
             if (role != null) {
-                axios.get('https://www.vagas.com.br/mapa-de-carreiras/servico/cargos/'+role[0], config)
-                .then(function(response) {
-                    data = response.data
-                    let $ = cheerio.load(data)
-                    $(".mobileButton ").each((index, element) => { 
-                        let paginationURL = $(element).attr("href") 
-                        axios.get('https://www.vagas.com.br/mapa-de-carreiras/servico/'+paginationURL, config)
-                        .then(function(response) {
-                            data = response.data
-                            let $2 = cheerio.load(data)
-                            $2(".higher dd").each((index, element) => { 
-                                let maiorSalario = $(element).attr("href") 
-                                console.log(maiorSalario)
-                                var response = {status: 200, resultado: 'Registro feito com sucesso'};
-                                res.json(response);
-                            })
-                           
-                        });
-                    })
+                setTimeout(() => {
+                    axios.get('https://www.vagas.com.br/mapa-de-carreiras/servico/cargos/'+role[0], config)
+                    .then(function(response) {
+                        data = response.data
+                        let $ = cheerio.load(data)
+                        $(".mobileButton ").each((index, element) => { 
+                            let paginationURL = $(element).attr("href") 
+                            axios.get('https://www.vagas.com.br/mapa-de-carreiras/servico/'+paginationURL, config)
+                            .then(function(response) {
+                                data = response.data
+                                let $ = cheerio.load(data)
+                                $("dd .higher").each((index, element) => { 
+                                    let maiorSalario = $(element).text()
+                                    fs.writeFileSync('vagawithsalary.json', JSON.stringify(maiorSalario), function(err) {
+                                        if (err) {
+                                            var response = {status: 'falha', resultado: err};
+                                            res.json(response);
+                                        } else {
+                                            var response = {status: 'sucesso', resultado: 'Registro feito com sucesso'};
+                                            res.json(response);
+                                        }
+                                    });
+                                    var response = {status: 200, resultado: 'Registro feito com sucesso'};
+                                    res.json(response);
+                                })
+                            
+                            });
+                        })
+                },"1000")
                    
 
-                    fs.writeFileSync('vagaswithsalay.json', JSON.stringify(data), function(err) {
-                        if (err) {
-                            var response = {status: 'falha', resultado: err};
-                            res.json(response);
-                        } else {
-                            var response = {status: 'sucesso', resultado: 'Registro feito com sucesso'};
-                            res.json(response);
-                        }
-                    });
+                  
                 });
             }
           });
 
 
-          res.json({});
+          //res.json({});
         }
       });
     
