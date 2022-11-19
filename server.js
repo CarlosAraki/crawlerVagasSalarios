@@ -71,9 +71,22 @@ app.get('/takeSalary', function(req, res){
                 .then(function(response) {
                     data = response.data
                     let $ = cheerio.load(data)
-                    console.log($)
-                    var response = {status: 200, resultado: 'Registro feito com sucesso'};
-                    res.json(response);
+                    $(".mobileButton ").each((index, element) => { 
+                        let paginationURL = $(element).attr("href") 
+                        axios.get('https://www.vagas.com.br/mapa-de-carreiras/servico/'+paginationURL, config)
+                        .then(function(response) {
+                            data = response.data
+                            let $2 = cheerio.load(data)
+                            $2(".higher dd").each((index, element) => { 
+                                let maiorSalario = $(element).attr("href") 
+                                console.log(maiorSalario)
+                                var response = {status: 200, resultado: 'Registro feito com sucesso'};
+                                res.json(response);
+                            })
+                           
+                        });
+                    })
+                   
 
                     fs.writeFileSync('vagaswithsalay.json', JSON.stringify(data), function(err) {
                         if (err) {
