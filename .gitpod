@@ -1,0 +1,10 @@
+tasks:
+  - name: nodemon
+    init: echo 'iniciando'
+    command: npm i -g nodemon
+
+
+ports:
+  - port: 3333
+    onOpen: open-browser
+    visibility: public
