@@ -6,5 +6,5 @@ services:
     volumes:
       - .:/app
     ports:
-      - "80:3333"
+      - "3333:3333"
 
