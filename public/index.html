@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análise de Carreiras - Vagas e Salários</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --bg-card: #18181c;
+      --border: #2a2a32;
+      --text: #e4e4e7;
+      --text-muted: #71717a;
+      --accent: #22d3ee;
+      --accent-dim: #0891b2;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --error: #f87171;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+      color: var(--bg);
+    }
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .progress-section {
+      display: none;
+    }
+    .progress-section.visible {
+      display: block;
+    }
+    .progress-bar-wrap {
+      height: 10px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .progress-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    .progress-text strong {
+      color: var(--accent);
+    }
+    .current-job {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: rgba(34, 211, 238, 0.08);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+      font-size: 0.9rem;
+    }
+    .current-job .label { color: var(--text-muted); }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+    }
+    .status-idle { background: var(--border); color: var(--text-muted); }
+    .status-running { background: rgba(34, 211, 238, 0.2); color: var(--accent); }
+    .status-done { background: rgba(74, 222, 128, 0.2); color: var(--success); }
+    .status-error { background: rgba(248, 113, 113, 0.2); color: var(--error); }
+    .results-section {
+      display: none;
+    }
+    .results-section.visible {
+      display: block;
+    }
+    .path-item {
+      background: rgba(255,255,255,0.02);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid var(--border);
+    }
+    .path-item .rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--accent);
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+    }
+    .path-item .salary {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 0.5rem;
+    }
+    .path-item .steps {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .path-item .caminho {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .path-item .cargo-chip {
+      padding: 0.2rem 0.5rem;
+      background: var(--border);
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .path-item .cargo-chip:last-child {
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--accent);
+    }
+    .path-item.clickable { cursor: pointer; }
+    .path-item.clickable:hover { border-color: var(--accent); background: rgba(34, 211, 238, 0.05); }
+    .autocomplete-wrap { position: relative; display: inline-block; width: 100%; max-width: 320px; }
+    .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; z-index: 100; margin-top: 2px; }
+    .autocomplete-item { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.9rem; }
+    .autocomplete-item:hover, .autocomplete-item.active { background: rgba(34, 211, 238, 0.15); }
+    .path-viz-block { margin-bottom: 2rem; }
+    .path-viz-block h3 { font-size: 0.95rem; color: var(--accent); margin-bottom: 1rem; }
+    #pathViz .node rect { rx: 8; }
+    #pathViz .link-path { fill: none; stroke: var(--border); stroke-width: 2; }
+    #pathViz .kw-badge { font-size: 0.7rem; padding: 0.15rem 0.4rem; }
+    .loading-spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .step-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .step-actions .hint {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      align-self: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Análise de Carreiras</h1>
+      <p class="subtitle">Top 10 caminhos para maximizar ganhos • Vagas.com.br</p>
+      <p id="serverHint" style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);display:none;">
+        ⚠️ Os botões só funcionam com o servidor rodando. Execute no terminal: <code style="background:var(--border);padding:0.2rem 0.5rem;border-radius:4px;">npm start</code> e acesse <a href="http://localhost:3333" style="color:var(--accent);">http://localhost:3333</a>
+      </p>
+    </header>
+
+    <div class="card" id="cardEtapa1">
+      <h2>Etapa 1 — Dados base</h2>
+      <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+        Baixe a lista de cargos do mapa. Pode pular se já tiver baixado antes.
+      </p>
+      <div class="step-actions">
+        <button id="btnSave" class="btn btn-primary" onclick="saveVagas()">Baixar cargos do mapa</button>
+        <span class="hint" id="saveHint"></span>
+        <span class="hint step-ok" id="etapa1Ok" style="display:none; color: var(--success);">✓ Pronto</span>
+      </div>
+    </div>
+
+    <div class="card" id="cardEtapa2">
+      <h2>Etapa 2 — Análise total</h2>
+      <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+        Coleta salários e conexões de carreira. Pode levar vários minutos. Independe da Etapa 1 se os dados já existirem.
+      </p>
+      <div class="step-actions">
+        <button id="btnStart" class="btn btn-primary" onclick="startCrawl()">Iniciar análise total</button>
+        <button id="btnViewResults" class="btn btn-primary" onclick="loadSavedResults()" style="display:none; background: var(--border); color: var(--text);">Ver resultados salvos</button>
+      </div>
+    </div>
+
+    <div class="card progress-section" id="progressSection">
+      <h2>Andamento da análise</h2>
+      <span class="status-badge status-running" id="statusBadge">Em execução</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <p class="progress-text" id="progressText">
+        <strong id="progressCurrent">0</strong> / <strong id="progressTotal">0</strong> cargos processados
+      </p>
+      <div class="current-job" id="currentJob" style="display: none;">
+        <span class="label">Processando:</span>
+        <span id="currentJobTitle">—</span>
+        <span id="currentJobSalary" style="color: var(--accent); margin-left: 0.5rem;"></span>
+      </div>
+    </div>
+
+    <div class="card results-section" id="resultsSection">
+      <h2>Top 10 caminhos para maximizar ganhos</h2>
+      <div id="resultsList"></div>
+    </div>
+
+    <div class="card" id="cardKeywords">
+      <h2>Etapa 3 — Análise com suas keywords do currículo</h2>
+      <p style="margin-bottom: 0.75rem; color: var(--text-muted); font-size: 0.9rem;">
+        Encontre os cargos que mais combinam com seu perfil. Clique em um cargo para ver o caminho até ele.
+      </p>
+      <label style="display:block;margin-bottom:0.5rem;font-size:0.9rem;">Meu cargo atual:</label>
+      <div class="autocomplete-wrap">
+        <input type="text" id="currentJobInput" value="Coordenador de TI" placeholder="Digite para buscar..." autocomplete="off" style="width:100%;background:var(--border);border:1px solid var(--bg);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-family:inherit;">
+        <div id="currentJobDropdown" class="autocomplete-dropdown" style="display:none;"></div>
+      </div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <h3 style="font-size:0.95rem;margin-bottom:0.75rem;">Pesquisar caminho específico</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;">
+          <div class="autocomplete-wrap" style="max-width:260px;">
+            <label style="display:block;margin-bottom:0.35rem;font-size:0.85rem;color:var(--text-muted);">De (cargo atual)</label>
+            <input type="text" id="searchFromInput" value="Coordenador de TI" placeholder="Ex: Coordenador de TI" autocomplete="off" style="width:100%;background:var(--border);border:1px solid var(--bg);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-family:inherit;">
+            <div id="searchFromDropdown" class="autocomplete-dropdown" style="display:none;"></div>
+          </div>
+          <div class="autocomplete-wrap" style="max-width:260px;">
+            <label style="display:block;margin-bottom:0.35rem;font-size:0.85rem;color:var(--text-muted);">Para (cargo alvo)</label>
+            <input type="text" id="searchToInput" placeholder="Ex: Diretor de TI" autocomplete="off" style="width:100%;background:var(--border);border:1px solid var(--bg);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-family:inherit;">
+            <div id="searchToDropdown" class="autocomplete-dropdown" style="display:none;"></div>
+          </div>
+          <button class="btn btn-primary" onclick="searchSpecificPath()">Buscar caminhos</button>
+        </div>
+      </div>
+      <div style="margin-top:1rem;"></div>
+      <textarea id="keywordsInput" rows="6" placeholder="Cole suas keywords separadas por vírgula..." style="width:100%;background:var(--border);border:1px solid var(--bg);border-radius:8px;padding:0.75rem;color:var(--text);font-family:inherit;margin-bottom:0.75rem;resize:vertical;">Chief Technology Officer (CTO), Head of IT, Diretor de Tecnologia, Gerente de TI Sênior, IT Operations, Liderança de Equipes de TI, Transformação Digital, Governança de TI, Cloud Computing, AWS, Microsoft Azure, Segurança da Informação, DevOps, CI/CD, Scrum, Engenharia de Software, Machine Learning, Inteligência Artificial, Python, Node.js</textarea>
+      <div class="step-actions">
+        <button id="btnKeywords" class="btn btn-primary" onclick="runKeywordsAnalysis()">Analisar por minhas keywords</button>
+      </div>
+      <div id="keywordsResults" style="display:none;margin-top:1rem;"></div>
+    </div>
+
+    <div class="card" id="pathVisualizationCard" style="display:none;">
+      <h2>Caminho(s) de carreira — <span id="pathTitle">Seu cargo</span> → <span id="pathTarget">Alvo</span></h2>
+      <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+        Cada coluna é um caminho (mín. 5 cargos). <strong>Clique em um card</strong> para ver as keywords para galgar. Role para ver todos.
+      </p>
+      <div id="pathViz" style="min-height:320px;max-height:75vh;overflow:auto;overflow-x:auto;"></div>
+      <div id="keywordsPopup" style="display:none;margin-top:1rem;padding:1rem;background:rgba(34,211,238,0.08);border:1px solid var(--accent);border-radius:var(--radius);"></div>
+    </div>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <script>
+    const API = (typeof window !== 'undefined' && window.location.protocol === 'file:')
+      ? 'http://localhost:3333'
+      : '';
+    let pollInterval = null;
+
+    async function saveVagas() {
+      const btn = document.getElementById('btnSave');
+      const hint = document.getElementById('saveHint');
+      btn.disabled = true;
+      hint.textContent = 'Baixando...';
+      try {
+        const res = await fetch(API + '/saveDBVagas');
+        const data = await res.json().catch(() => ({}));
+        if (data.status === 'sucesso') {
+          hint.textContent = '✓ ' + (data.resultado || 'Salvo');
+          hint.style.color = 'var(--success)';
+          loadStatus();
+        } else if (!res.ok) {
+          hint.textContent = 'Servidor offline. Execute: npm start e acesse http://localhost:3333';
+          hint.style.color = 'var(--error)';
+        } else {
+          hint.textContent = 'Erro: ' + (data.resultado || data.erro || 'Falha');
+          hint.style.color = 'var(--error)';
+        }
+      } catch (e) {
+        hint.textContent = (e.message === 'Failed to fetch' || e.name === 'TypeError')
+          ? 'Servidor offline. Execute: npm start'
+          : 'Erro: ' + (e.message || 'Desconhecido');
+        hint.style.color = 'var(--error)';
+      }
+      btn.disabled = false;
+    }
+
+    async function startCrawl() {
+      const btn = document.getElementById('btnStart');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> Iniciando...';
+      try {
+        const res = await fetch(API + '/api/crawl/start', { method: 'POST' });
+        const data = await res.json();
+        if (!data.ok) {
+          alert(data.mensagem || 'Erro ao iniciar');
+          btn.disabled = false;
+          btn.innerHTML = 'Iniciar análise total';
+          return;
+        }
+        document.getElementById('progressSection').classList.add('visible');
+        document.getElementById('resultsSection').classList.remove('visible');
+        startPolling();
+      } catch (e) {
+        const msg = (e.message === 'Failed to fetch' || e.name === 'TypeError')
+          ? 'Servidor offline. Execute: npm start e acesse http://localhost:3333'
+          : 'Erro: ' + (e.message || 'Desconhecido');
+        alert(msg);
+        btn.disabled = false;
+        btn.innerHTML = 'Iniciar análise total';
+      }
+    }
+
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(updateProgress, 1500);
+      updateProgress();
+    }
+
+    function stopPolling() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStart').innerHTML = 'Iniciar nova análise';
+    }
+
+    async function updateProgress() {
+      try {
+        const res = await fetch(API + '/api/crawl/progress');
+        const s = await res.json();
+        const total = s.total || 1;
+        const current = s.current || 0;
+        const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressCurrent').textContent = current;
+        document.getElementById('progressTotal').textContent = total;
+
+        const badge = document.getElementById('statusBadge');
+        badge.className = 'status-badge status-' + s.status;
+        badge.textContent = s.status === 'idle' ? 'Aguardando' : s.status === 'running' ? 'Em execução' : s.status === 'done' ? 'Concluído' : 'Erro';
+
+        const cj = document.getElementById('currentJob');
+        if (s.status === 'running' && s.currentJob) {
+          cj.style.display = 'block';
+          document.getElementById('currentJobTitle').textContent = s.currentJob.title || '—';
+          const sal = s.currentJob.salaryHigh;
+          document.getElementById('currentJobSalary').textContent = sal != null ? 'R$ ' + Number(sal).toLocaleString('pt-BR') : 'N/I';
+        } else {
+          cj.style.display = 'none';
+        }
+
+        if (s.status === 'done') {
+          stopPolling();
+          renderResults(s.topPaths);
+          document.getElementById('resultsSection').classList.add('visible');
+        } else if (s.status === 'error') {
+          stopPolling();
+          alert('Erro: ' + (s.error || 'Desconhecido'));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderResults(paths, showAffinity) {
+      if (!paths || paths.length === 0) {
+        document.getElementById('resultsList').innerHTML = '<p style="color: var(--text-muted);">Nenhum resultado.</p>';
+        return;
+      }
+      const stepsLabel = (p) => {
+        const n = p.passos ?? (p.caminho || []).length ?? 1;
+        return n === 1 ? '1 passo' : n + ' passos';
+      };
+      document.getElementById('resultsList').innerHTML = paths.map(p => `
+        <div class="path-item">
+          <div class="rank">#${p.rank} — ${stepsLabel(p)}${p.afinidade != null ? ' • afinidade: ' + p.afinidade : ''}</div>
+          <div class="salary">${p.salarioFormatado}</div>
+          ${(p.keywordsEncontradas || []).length ? '<div class="path-keywords" style="font-size:0.8rem;color:var(--text-muted);margin:0.25rem 0;">Keywords: ' + (p.keywordsEncontradas || []).slice(0,5).join(', ') + '</div>' : ''}
+          <div class="caminho">
+            ${(p.caminho || []).map(c => `<span class="cargo-chip">${typeof c === 'object' ? (c.cargo || c.title || '') : c}</span>`).join(' → ')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function runKeywordsAnalysis() {
+      const btn = document.getElementById('btnKeywords');
+      const resultsDiv = document.getElementById('keywordsResults');
+      const raw = document.getElementById('keywordsInput').value.trim();
+      const keywords = raw ? raw.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean) : null;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> Analisando...';
+      try {
+        const res = await fetch(API + '/api/analyze-by-keywords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keywords: keywords || undefined })
+        });
+        const data = await res.json();
+        if (data.erro) {
+          alert(data.erro);
+        } else {
+          resultsDiv.style.display = 'block';
+          resultsDiv.innerHTML = '<h3 style="margin-bottom:0.75rem;">Clique em um cargo para ver o caminho até ele</h3>' +
+            (data.topCaminhos || []).map((p, idx) => `
+              <div class="path-item clickable" data-cargo="${(p.cargo || '').replace(/"/g, '&quot;')}" data-idx="${idx}">
+                <div class="rank">#${p.rank} • afinidade: ${p.afinidade || 0}</div>
+                <div class="salary">${p.salarioFormatado}</div>
+                <div style="font-size:0.8rem;color:var(--accent);margin:0.25rem 0;">${(p.keywordsEncontradas || []).join(', ') || '—'}</div>
+                <div class="caminho"><span class="cargo-chip">${p.cargo}</span></div>
+              </div>
+            `).join('');
+          resultsDiv.querySelectorAll('.path-item.clickable').forEach(el => {
+            el.onclick = () => showCareerPath(el.dataset.cargo || el.getAttribute('data-cargo'));
+          });
+        }
+      } catch (e) {
+        const msg = (e.message === 'Failed to fetch' || e.name === 'TypeError')
+          ? 'Servidor offline. Execute: npm start e acesse http://localhost:3333'
+          : 'Erro: ' + (e.message || 'Desconhecido');
+        alert(msg);
+      }
+      btn.disabled = false;
+      btn.innerHTML = 'Analisar por minhas keywords';
+    }
+
+    async function loadStatus() {
+      try {
+        const r = await fetch(API + '/api/status');
+        if (!r.ok) throw new Error('Servidor retornou ' + r.status);
+        const st = await r.json();
+        if (st.etapa1Ok) {
+          document.getElementById('saveHint').textContent = '✓ ' + st.cargosCount + ' cargos disponíveis';
+          document.getElementById('saveHint').style.color = 'var(--success)';
+          document.getElementById('saveHint').style.display = 'inline';
+          document.getElementById('btnSave').textContent = 'Atualizar cargos';
+        } else {
+          document.getElementById('saveHint').textContent = 'Base ainda não baixada';
+          document.getElementById('saveHint').style.color = 'var(--text-muted)';
+          document.getElementById('saveHint').style.display = 'inline';
+        }
+        if (st.etapa2Ok) {
+          document.getElementById('btnViewResults').style.display = 'inline-flex';
+        }
+      } catch (e) {
+        document.getElementById('saveHint').textContent = 'Servidor offline — execute: npm start';
+        document.getElementById('saveHint').style.color = 'var(--error)';
+        document.getElementById('saveHint').style.display = 'inline';
+        console.error('loadStatus:', e);
+      }
+    }
+
+    async function showCareerPath(targetCargo) {
+      const currentJob = document.getElementById('currentJobInput').value.trim() || 'Coordenador de TI';
+      document.getElementById('searchFromInput').value = currentJob;
+      document.getElementById('searchToInput').value = targetCargo;
+      await fetchAndRenderPaths(currentJob, targetCargo);
+    }
+
+    async function searchSpecificPath() {
+      const from = document.getElementById('searchFromInput').value.trim();
+      const to = document.getElementById('searchToInput').value.trim();
+      if (!to) { alert('Informe o cargo alvo.'); return; }
+      document.getElementById('currentJobInput').value = from;
+      await fetchAndRenderPaths(from || 'Coordenador de TI', to);
+    }
+
+    async function fetchAndRenderPaths(from, to) {
+      const card = document.getElementById('pathVisualizationCard');
+      document.getElementById('pathTitle').textContent = from;
+      document.getElementById('pathTarget').textContent = to;
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth' });
+      const viz = document.getElementById('pathViz');
+      viz.innerHTML = '<p style="color:var(--text-muted);">Carregando caminhos...</p>';
+      try {
+        const res = await fetch(API + '/api/career-path?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to));
+        const data = await res.json();
+        if (data.erro) {
+          viz.innerHTML = '<p style="color:var(--error);">' + data.erro + '</p>';
+        } else {
+          viz.innerHTML = '';
+          if (data.nota) {
+            const notaEl = document.createElement('p');
+            notaEl.style.cssText = 'color:var(--warning);font-size:0.9rem;margin-bottom:1rem;padding:0.75rem;background:rgba(251,191,36,0.1);border-radius:8px;';
+            notaEl.textContent = data.nota;
+            viz.appendChild(notaEl);
+          }
+          const paths = data.paths || (data.path ? [data.path] : []);
+          renderPathsUnifiedGraph(paths, viz);
+        }
+      } catch (e) {
+        const msg = (e.message === 'Failed to fetch' || e.name === 'TypeError')
+          ? 'Servidor offline. Execute: npm start e acesse http://localhost:3333'
+          : (e.message || 'Desconhecido');
+        viz.innerHTML = '<p style="color:var(--error);">Erro: ' + msg + '</p>';
+      }
+    }
+
+    let suggestTimeout = null;
+    function setupAutocomplete(inputId, dropdownId) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+      input.addEventListener('input', () => {
+        clearTimeout(suggestTimeout);
+        const q = input.value.trim();
+        if (q.length < 2) { dropdown.style.display = 'none'; return; }
+        suggestTimeout = setTimeout(async () => {
+          try {
+            const res = await fetch(API + '/api/jobs/suggest?q=' + encodeURIComponent(q));
+            const items = await res.json();
+            if (items.length === 0) { dropdown.style.display = 'none'; return; }
+            dropdown.innerHTML = items.map(it => '<div class="autocomplete-item" data-title="' + (it.title || '').replace(/"/g, '&quot;') + '">' + (it.title || '') + '</div>').join('');
+            dropdown.style.display = 'block';
+            dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+              el.onclick = () => { input.value = el.dataset.title; dropdown.style.display = 'none'; };
+            });
+          } catch (e) { dropdown.style.display = 'none'; }
+        }, 200);
+      });
+      input.addEventListener('blur', () => setTimeout(() => { dropdown.style.display = 'none'; }, 150));
+      input.addEventListener('focus', () => { if (input.value.trim().length >= 2) input.dispatchEvent(new Event('input')); });
+    }
+
+    function renderPathsUnifiedGraph(paths, containerEl) {
+      const container = containerEl || document.getElementById('pathViz');
+      const popup = document.getElementById('keywordsPopup');
+      if (popup) popup.style.display = 'none';
+      const flatPaths = paths && paths.length ? paths : [];
+      if (flatPaths.length === 0 || !flatPaths[0] || flatPaths[0].length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);">Nenhum caminho encontrado.</p>';
+        return;
+      }
+      const nodeWidth = 160;
+      const nodeHeight = 62;
+      const stepGap = 50;
+      const colGap = 24;
+      const pathColors = ['#22d3ee', '#a78bfa', '#f472b6', '#fbbf24'];
+      const maxDepth = Math.max(...flatPaths.map(p => p.length));
+      const numPaths = flatPaths.length;
+      const colWidth = nodeWidth + colGap;
+      const width = numPaths * colWidth + 80;
+      const height = maxDepth * (nodeHeight + stepGap) + 80;
+
+      const nodeMap = new Map();
+      const keywordsByNode = new Map();
+      flatPaths.forEach((path, pathIdx) => {
+        path.forEach((node, stepIdx) => {
+          const key = (node.cargo || '').trim();
+          if (!nodeMap.has(key)) nodeMap.set(key, { ...node, paths: [], steps: [] });
+          const n = nodeMap.get(key);
+          if (!n.paths.includes(pathIdx)) n.paths.push(pathIdx);
+          n.steps.push({ pathIdx, stepIdx });
+        });
+        for (let i = 0; i < path.length - 1; i++) {
+          const fromKey = (path[i].cargo || '').trim();
+          const toCargo = (path[i + 1].cargo || '').trim();
+          const kw = path[i].keywordsParaProximo || [];
+          if (!keywordsByNode.has(fromKey)) keywordsByNode.set(fromKey, []);
+          keywordsByNode.get(fromKey).push({ to: toCargo, keywords: kw, pathIdx });
+        }
+      });
+
+      const startCargo = (flatPaths[0][0]?.cargo || '').trim();
+      const endCargo = (flatPaths[0][flatPaths[0].length - 1]?.cargo || '').trim();
+
+      d3.select(container).selectAll('*').remove();
+      const svg = d3.select(container).append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', `0 0 ${width} ${height}`)
+        .style('min-width', '100%');
+
+      flatPaths.forEach((path, pathIdx) => {
+        const colLeft = 40 + pathIdx * colWidth;
+        const centerX = colLeft + nodeWidth / 2;
+        for (let i = 0; i < path.length - 1; i++) {
+          const from = path[i];
+          const fromY = 40 + i * (nodeHeight + stepGap) + nodeHeight;
+          const toY = 40 + (i + 1) * (nodeHeight + stepGap);
+          const kw = from.keywordsParaProximo || [];
+          const g = svg.append('g');
+          g.append('line')
+            .attr('x1', centerX).attr('y1', fromY)
+            .attr('x2', centerX).attr('y2', toY)
+            .attr('stroke', pathColors[pathIdx % pathColors.length])
+            .attr('stroke-width', 2)
+            .attr('opacity', 0.8);
+          if (kw.length > 0) g.append('title').text('Keywords: ' + kw.slice(0, 8).join(', '));
+        }
+      });
+
+      flatPaths.forEach((path, pathIdx) => {
+        const colLeft = 40 + pathIdx * colWidth;
+        path.forEach((node, stepIdx) => {
+          const cargo = (node.cargo || '').trim();
+          const isStart = cargo === startCargo;
+          const isEnd = cargo === endCargo;
+          const y = 40 + stepIdx * (nodeHeight + stepGap);
+          const g = svg.append('g').attr('transform', `translate(${colLeft}, ${y})`);
+        if (cargo && cargo.length > 24) {
+          g.append('title').text(cargo + ' — R$ ' + Number(node.salarioAlto || 0).toLocaleString('pt-BR'));
+        }
+
+        const rect = g.append('rect')
+          .attr('width', nodeWidth)
+          .attr('height', nodeHeight)
+          .attr('rx', 10)
+          .attr('fill', isStart ? 'rgba(34, 211, 238, 0.2)' : isEnd ? 'rgba(74, 222, 128, 0.2)' : 'rgba(42, 42, 50, 0.9)')
+          .attr('stroke', isStart ? '#22d3ee' : isEnd ? '#4ade80' : '#2a2a32')
+          .attr('stroke-width', isStart || isEnd ? 2.5 : 1.5)
+          .style('cursor', keywordsByNode.has(cargo) ? 'pointer' : 'default');
+        if (keywordsByNode.has(cargo)) {
+          rect.on('mouseenter', function() { d3.select(this).attr('stroke', '#22d3ee'); })
+              .on('mouseleave', function() { d3.select(this).attr('stroke', isStart ? '#22d3ee' : isEnd ? '#4ade80' : '#2a2a32'); })
+              .on('click', function() {
+                const trans = keywordsByNode.get(cargo);
+                if (!trans || trans.length === 0) return;
+                const byTo = new Map();
+                trans.forEach(t => {
+                  const toKey = (t.to || '').trim();
+                  if (!toKey) return;
+                  if (!byTo.has(toKey)) byTo.set(toKey, new Set());
+                  (t.keywords || []).forEach(k => byTo.get(toKey).add(k));
+                });
+                let html = '<strong>' + (cargo || '').replace(/</g, '&lt;') + '</strong><br><span style="color:var(--text-muted);font-size:0.9rem;">Keywords para buscar/desenvolver:</span><ul style="margin:0.5rem 0 0 1rem;padding:0;">';
+                byTo.forEach((kwSet, toCargo) => {
+                  const kwList = [...kwSet].map(k => '<span class="kw-badge" style="display:inline-block;margin:0.15rem;padding:0.2rem 0.5rem;background:rgba(34,211,238,0.2);border-radius:4px;font-size:0.8rem;">' + (k || '').replace(/</g, '&lt;') + '</span>').join('');
+                  html += '<li style="margin-bottom:0.5rem;"><span style="color:var(--accent);">→ ' + (toCargo || '').replace(/</g, '&lt;') + '</span><div style="margin-top:0.25rem;">' + kwList + '</div></li>';
+                });
+                html += '</ul>';
+                const pop = document.getElementById('keywordsPopup');
+                if (pop) {
+                  pop.innerHTML = html;
+                  pop.style.display = 'block';
+                  pop.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+              });
+        }
+
+        function wrapTitle(t, maxLen, maxLines) {
+          if (!t || t.length <= maxLen) return [t || ''];
+          const lines = [];
+          let rest = t;
+          while (rest && lines.length < maxLines) {
+            if (rest.length <= maxLen) { lines.push(rest); break; }
+            const chunk = rest.substring(0, maxLen);
+            const lastSpace = chunk.lastIndexOf(' ');
+            const cut = lastSpace > maxLen / 2 ? lastSpace : maxLen;
+            lines.push(rest.substring(0, cut).trim());
+            rest = rest.substring(cut).trim();
+          }
+          return lines.length ? lines : [t];
+        }
+        const titleLines = wrapTitle(cargo, 22, 2);
+        titleLines.forEach((line, i) => {
+          g.append('text')
+            .attr('x', nodeWidth / 2)
+            .attr('y', 16 + i * 12)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#e4e4e7')
+            .attr('font-size', '9px')
+            .attr('font-weight', 600)
+            .text((line || '').substring(0, 24) + ((line || '').length > 24 ? '…' : ''));
+        });
+
+        g.append('text')
+          .attr('x', nodeWidth / 2)
+          .attr('y', titleLines.length > 1 ? 50 : 40)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#4ade80')
+          .attr('font-size', '9px')
+          .text('R$ ' + Number(node.salarioAlto || 0).toLocaleString('pt-BR'));
+        });
+      });
+
+      if (numPaths > 1) {
+        flatPaths.forEach((_, pathIdx) => {
+          const colLeft = 40 + pathIdx * colWidth;
+          svg.append('text')
+            .attr('x', colLeft + nodeWidth / 2)
+            .attr('y', 22)
+            .attr('text-anchor', 'middle')
+            .attr('fill', pathColors[pathIdx % pathColors.length])
+            .attr('font-size', '10px')
+            .attr('font-weight', 600)
+            .text('Caminho ' + (pathIdx + 1));
+        });
+      }
+
+      // Painel de keywords para galgar (mín. 5 por transição)
+      const stepsData = [];
+      const seenTransitions = new Set();
+      flatPaths.forEach((path, pathIdx) => {
+        for (let i = 0; i < path.length - 1; i++) {
+          const kw = path[i].keywordsParaProximo || [];
+          const key = (path[i].cargo + '->' + path[i + 1].cargo).trim();
+          if (kw.length >= 5 && !seenTransitions.has(key)) {
+            seenTransitions.add(key);
+            stepsData.push({ from: path[i].cargo, to: path[i + 1].cargo, keywords: kw, pathIdx });
+          }
+        }
+      });
+      if (stepsData.length > 0) {
+        const panel = document.createElement('div');
+        panel.className = 'keywords-panel';
+        panel.style.cssText = 'margin-top:1.5rem;padding:1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);';
+        panel.innerHTML = '<h3 style="font-size:0.95rem;color:var(--accent);margin-bottom:1rem;">Keywords para galgar ao próximo cargo (mín. 5)</h3>' +
+          stepsData.map(s => {
+            const kwList = (s.keywords || []).slice(0, 12).map(k => '<span class="kw-badge" style="display:inline-block;margin:0.2rem 0.2rem 0.2rem 0;padding:0.2rem 0.5rem;background:rgba(34,211,238,0.15);border-radius:4px;font-size:0.8rem;">' + (k || '').replace(/</g, '&lt;') + '</span>').join('');
+            return '<div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);" class="transition-block">' +
+              '<div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem;">' + (s.from || '').substring(0, 40) + ' → ' + (s.to || '').substring(0, 40) + '</div>' +
+              '<div class="keywords-list">' + kwList + '</div></div>';
+          }).join('');
+        container.appendChild(panel);
+      }
+    }
+
+    async function loadSavedResults() {
+      try {
+        const r = await fetch(API + '/api/top-paths?n=10');
+        const data = await r.json();
+        if (data.topCaminhos?.length) {
+          document.getElementById('resultsSection').classList.add('visible');
+          document.getElementById('progressSection').classList.remove('visible');
+          renderResults(data.topCaminhos);
+        } else {
+          alert('Execute a análise total primeiro ou aguarde concluir.');
+        }
+      } catch (e) {
+        const msg = (e.message === 'Failed to fetch' || e.name === 'TypeError')
+          ? 'Servidor offline. Execute: npm start e acesse http://localhost:3333'
+          : (e.message || 'Desconhecido');
+        alert('Erro ao carregar: ' + msg);
+      }
+    }
+
+    if (window.location.pathname === '/' || window.location.pathname.endsWith('index.html') || window.location.pathname === '') {
+      const sh = document.getElementById('serverHint');
+      if (sh && window.location.protocol === 'file:') sh.style.display = 'block';
+      setupAutocomplete('currentJobInput', 'currentJobDropdown');
+      setupAutocomplete('searchFromInput', 'searchFromDropdown');
+      setupAutocomplete('searchToInput', 'searchToDropdown');
+      loadStatus();
+      fetch(API + '/api/crawl/progress')
+        .then(r => r.json())
+        .then(s => {
+          if (s.status === 'running') {
+            document.getElementById('progressSection').classList.add('visible');
+            document.getElementById('btnStart').disabled = true;
+            document.getElementById('btnStart').innerHTML = '<span class="loading-spinner"></span> Análise em andamento';
+            startPolling();
+          } else if (s.status === 'done' && s.topPaths?.length) {
+            document.getElementById('progressSection').classList.add('visible');
+            document.getElementById('statusBadge').className = 'status-badge status-done';
+            document.getElementById('statusBadge').textContent = 'Concluído';
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressCurrent').textContent = s.current;
+            document.getElementById('progressTotal').textContent = s.total;
+            document.getElementById('resultsSection').classList.add('visible');
+            renderResults(s.topPaths);
+          } else {
+            loadStatus();
+          }
+        })
+        .catch(() => { loadStatus(); });
+    }
+  </script>
+</body>
+</html>

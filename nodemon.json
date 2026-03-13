@@ -1,0 +1,4 @@
+{
+  "watch": ["server.js", "lib"],
+  "ignore": ["vagasdb.json", "vagawithsalary.json", "vagawithurl.json", "node_modules", ".git", "*.log"]
+}

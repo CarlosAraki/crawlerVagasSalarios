@@ -16,24 +16,35 @@ npm install
 npm start
 ```
 
+Acesse **http://localhost:3333** para usar o frontend com acompanhamento da análise em tempo real.
+
 ## Endpoints da API
 
 | Endpoint | Descrição |
 |----------|-----------|
+| `GET /` | **Frontend** — Interface com progresso em tempo real |
 | `GET /saveDBVagas` | Baixa e salva todos os cargos do mapa em `vagasdb.json` |
+| `POST /api/crawl/start` | Inicia análise total em background (query: `?limit=0` = todos) |
+| `GET /api/crawl/progress` | Retorna o progresso atual da análise |
 | `GET /takeSalaryV2` | Busca salários (versão otimizada, salva em `vagawithurl.json`) |
-| `GET /crawlCareers?limit=50` | Crawl completo com conexões de carreira (salva em `vagawithsalary.json`) |
+| `GET /crawlCareers?limit=50` | Crawl síncrono (retrocompatibilidade) |
 | `GET /api/top-paths?n=10` | **Retorna os 10 melhores caminhos para maximizar ganhos** |
+| `POST /api/analyze-by-keywords` | Análise por keywords do currículo (body: `{ keywords: [...] }`) |
 | `GET /api/top-jobs?n=10` | Top N cargos por salário (ranking simples) |
 | `GET /api` | Lista todos os cargos brutos |
 
 ## Fluxo para obter os 10 melhores caminhos
 
-1. **Salvar vagas**: `GET /saveDBVagas`
-2. **Crawlear carreiras** (com conexões): `GET /crawlCareers?limit=100`
-3. **Consultar top paths**: `GET /api/top-paths?n=10`
+1. Acesse **http://localhost:3333**
+2. Clique em **Baixar cargos do mapa** (Etapa 1)
+3. Clique em **Iniciar análise total** (Etapa 2)
+4. Acompanhe o progresso em tempo real na barra e nos resultados ao final
 
-O parâmetro `limit` em `/crawlCareers` define quantos cargos processar. Valores maiores (ex: 200) geram análises mais completas, mas demoram mais.
+Ou via API:
+1. `GET /saveDBVagas`
+2. `POST /api/crawl/start` (análise em background)
+3. `GET /api/crawl/progress` (polling do progresso)
+4. `GET /api/top-paths?n=10`
 
 ## Exemplo de resposta `/api/top-paths`
 
